@@ -1,4 +1,5 @@
 #pragma once
+#include "ofMain.h"
 #include <string>
 #include <random>
 //#include "GenericArray.h"
@@ -16,6 +17,8 @@ public:
 	float posX, posY;
 
 	float velX, velY;
+
+	ofColor entityColor;
 
 	void draw();
 };
