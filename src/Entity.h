@@ -20,6 +20,8 @@ public:
 
 	ofColor entityColor;
 
+	ofImage sprite;
+
 	void draw();
 };
 /*

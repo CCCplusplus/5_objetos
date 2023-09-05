@@ -4,7 +4,7 @@ const float gravity = 9.81 * 200; //arbitrary gravity change
 const float bounce = 0.8; //menor a un para que disminuya el rebote.
 const float piso = 871;
 
-//Tarea Hacer Animaciones y que la lista vaya cambiando de elementos con las teclas.
+
 //--------------------------------------------------------------
 void ofApp::setup(){
 	appstate = EAppState::menu;
@@ -53,14 +53,28 @@ void ofApp::SetupLemmings()
 	playerSizeOffSet = ofVec2f(0, 2);
 	Entity hands = Entity();
 	hands.name = "MANOS";
+	hands.sprite.load("blank.png");
 	inventory.push_back(hands);
 	Entity sword = Entity();
 	sword.name = "ESPADA";
+	sword.sprite.load("espada.png");
 	inventory.push_back(sword);
 	Entity poison = Entity();
 	poison.name = "VENENO";
+	poison.sprite.load("veneno.png");
 	inventory.push_back(poison);
 	currentItem = &hands;
+
+	axe.sprite.load("hacha.png");
+	axe.name = "Hacha";
+
+	hammer.sprite.load("martillo.png");
+	hammer.name = "Martillo";
+
+	gun.sprite.load("pistola.png");
+	gun.name = "pistola";
+
+	lastSpawnTime = ofGetElapsedTimef();
 }
 
 //--------------------------------------------------------------
@@ -161,15 +175,25 @@ void ofApp::UpdateLemmings()
 	}
 
 	// Incrementa el índice de animación
-	animationIndex += animationSpeed * deltaTime;
+	if(w ^ a ^ s ^ d)
+	animationtransition += animationSpeed * deltaTime;
+	if (animationtransition >= 3) animationtransition = 0;
+
+	if (animationtransition > 0 && animationtransition < 1)
+		animationIndex = 0;
+	if (animationtransition > 1 && animationtransition < 2)
+		animationIndex = 1;
+	if (animationtransition > 2 && animationtransition < 3)
+		animationIndex = 2;
+	if (animationtransition >= 3)
+		animationIndex = 3;
+
 	if (animationIndex >= 3) animationIndex = 0;
 
-	std::cout << animationIndex << "\n";
-
 	if (weaponIndex < minWeapon)
-		weaponIndex = minWeapon;
-	if (weaponIndex > maxWeapon)
 		weaponIndex = maxWeapon;
+	if (weaponIndex > maxWeapon)
+		weaponIndex = minWeapon;
 
 	std::list<Entity>::iterator it = inventory.begin();
 	if (weaponIndex == 0 && it != inventory.end()) {
@@ -180,6 +204,41 @@ void ofApp::UpdateLemmings()
 	}
 	else if (weaponIndex == 2 && std::next(it, 2) != inventory.end()) {
 		currentItem = &(*std::next(it, 2));
+	}
+	else if (weaponIndex == 3 && std::next(it, 3) != inventory.end()) {
+		currentItem = &(*std::next(it, 3));
+	}
+	else if (weaponIndex == 4 && std::next(it, 4) != inventory.end()) {
+		currentItem = &(*std::next(it, 4));
+	}
+	else if (weaponIndex == 5 && std::next(it, 5) != inventory.end()) {
+		currentItem = &(*std::next(it, 5));
+	}
+
+	float currentTime = ofGetElapsedTimef();
+	float spawnInterval = 5.0f;
+
+	if (currentTime - lastSpawnTime > spawnInterval) {
+		SpawnRandomItem();
+		lastSpawnTime = currentTime;
+	}
+
+	for (auto it = spawnedItems.begin(); it != spawnedItems.end(); ) {
+		if (currentTime >= it->spawnTime) {
+			float distance = ofDist(it->itemEntity.posX, it->itemEntity.posY, posx, posy);
+			if (distance < radioCirculo) {
+				inventory.push_back(it->itemEntity);
+				if(maxWeapon < 6)
+				maxWeapon++;
+				it = spawnedItems.erase(it);
+			}
+			else {
+				++it;
+			}
+		}
+		else {
+			++it;
+		}
 	}
 }
 
@@ -212,8 +271,33 @@ void ofApp::draw(){
 		ofSetColor(252, 252, 252);
 		playerSpriteImg.drawSubsection(posx, posy, playerSize.x, playerSize.y, playerSizeOffSet.x, playerSizeOffSet.y);
 		myfont.drawString(currentItem == nullptr ? "NULL" : currentItem->name.c_str(), posx, posy);
+		if (currentItem && currentItem->sprite.isAllocated()) 
+			currentItem->sprite.draw(posx+25, posy);
+		for (auto& itemSpawn : spawnedItems) {
+			float currentTime = ofGetElapsedTimef();
+			if (currentTime >= itemSpawn.spawnTime) {
+				itemSpawn.itemEntity.sprite.draw(itemSpawn.itemEntity.posX, itemSpawn.itemEntity.posY);
+			}
+		}
 	}
 }
+
+void ofApp::SpawnRandomItem() {
+	std::vector<Entity> items = { axe, hammer, gun };
+
+	int randomIndex = ofRandom(items.size());
+	Entity selectedItem = items[randomIndex];
+
+	selectedItem.posX = ofRandom(ofGetWidth());
+	selectedItem.posY = ofRandom(ofGetHeight());
+
+	ItemSpawn newItem;
+	newItem.itemEntity = selectedItem;
+	newItem.spawnTime = ofGetElapsedTimef() + ofRandom(3, 10);
+
+	spawnedItems.push_back(newItem);
+}
+
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){

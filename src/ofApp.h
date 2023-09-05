@@ -5,6 +5,12 @@
 #include "Entity.h"
 #include "ofxGui.h"
 
+struct ItemSpawn {
+	Entity itemEntity; // Entidad del item
+	float spawnTime; // Tiempo para aparecer
+};
+
+
 class ofApp : public ofBaseApp{
 
 	public:
@@ -15,6 +21,7 @@ class ofApp : public ofBaseApp{
 		void UpdatePelotas();
 		void UpdateLemmings();
 		void draw();
+		void SpawnRandomItem();
 
 		void keyPressed(int key);
 		void keyReleased(int key);
@@ -31,6 +38,7 @@ class ofApp : public ofBaseApp{
 		float radioCirculo;
 
 		std::vector<Entity> gameObjects;
+		std::list<ItemSpawn> spawnedItems;
 
 		enum EAppState {
 			menu, pelotas, lemmings, mas
@@ -54,12 +62,17 @@ class ofApp : public ofBaseApp{
 		bool w, s, a, d;
 		std::list<Entity> inventory;
 		Entity* currentItem;
+		ofImage bokuNoImage;
 
 		int animationIndex = 0;
-		float animationSpeed = 109.30; 
+		float animationtransition = 0.0f;
+		float animationSpeed = 7.5f; 
 		char lastDirection = 0; 
 
 		int weaponIndex = 0;
 		int minWeapon = 0;
 		int maxWeapon = 2;
+		float lastSpawnTime;
+
+		Entity axe, hammer, gun;
 };
